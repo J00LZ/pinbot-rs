@@ -2,7 +2,8 @@ use serenity::{
     client::{Context, EventHandler},
     model::{
         channel::Reaction,
-        gateway::{Activity, Ready}, id::{ChannelId, MessageId},
+        gateway::{Activity, Ready},
+        id::{ChannelId, MessageId},
     },
     prelude::GatewayIntents,
     Client,
@@ -20,48 +21,50 @@ impl EventHandler for Handler {
     }
 
     async fn reaction_add(&self, c: Context, r: Reaction) {
-        let emoji = r.emoji.as_data();
-        if emoji == "📌" {
-            let msg = r.message(c.http.clone()).await.expect("Could not find message");
-            for r in &msg.reactions {
-                let emoji = r.reaction_type.as_data();
-                if emoji == "📌" {
-                    let count = r.count;
-                    if count >= 5 {
-                        msg.pin(c.http.clone()).await.expect("Could not pin message");
-                    }
-                }
-            }
+        if let Err(e) = handle_react(c, r).await {
+            println!("Error: {:?}", e);
         }
     }
 
     async fn reaction_remove(&self, c: Context, r: Reaction) {
-        let emoji = r.emoji.as_data();
-        if emoji == "📌" {
-            let msg = r.message(&c.http).await.expect("Could not find message");
-            for r in &msg.reactions {
-                let emoji = r.reaction_type.as_data();
-                if emoji == "📌" {
-                    let count = r.count;
-                    if count < 3 {
-                        msg.unpin(&c.http).await.expect("Could not unpin message");
-                    }
+        if let Err(e) = handle_react(c, r).await {
+            println!("Error: {:?}", e);
+        }
+    }
+
+    async fn reaction_remove_all(&self, c: Context, c_id: ChannelId, m_id: MessageId) {
+        let msg = match c.http.get_message(c_id.0, m_id.0).await {
+            Ok(m) => m,
+            Err(e) => {
+                println!("Error: {:?}", e);
+                return;
+            }
+        };
+        if msg.pinned {
+            if let Err(e) = msg.unpin(&c.http).await {
+                println!("Error: {:?}", e);
+            }
+        }
+    }
+}
+
+async fn handle_react(c: Context, r: Reaction) -> Result<(), serenity::Error> {
+    let emoji = r.emoji.as_data();
+    if emoji == "📌" {
+        let msg = r.message(c.http.clone()).await?;
+        for r in &msg.reactions {
+            let emoji = r.reaction_type.as_data();
+            if emoji == "📌" {
+                let count = r.count;
+                if count >= 5 {
+                    msg.pin(c.http.clone()).await?;
+                } else if count < 3 {
+                    msg.unpin(&c.http).await?;
                 }
             }
         }
     }
-
-    async fn reaction_remove_all(
-        &self,
-        c: Context,
-        c_id: ChannelId,
-        m_id: MessageId,
-    ) {
-        let msg = c.http.get_message(c_id.0, m_id.0).await.expect("Could not find message");
-        if msg.pinned {
-            msg.unpin(&c.http).await.expect("Could not unpin message");
-        }
-    }
+    Ok(())
 }
 
 #[tokio::main]
