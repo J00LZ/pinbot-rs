@@ -1,0 +1,25 @@
+---
+kind: pipeline
+type: kubernetes
+name: Build Docker image
+
+trigger:
+  branch:
+    - main
+  event:
+    exclude:
+      - pull_request
+
+steps:
+- name: kaniko
+  image: plugins/kaniko
+  settings:
+    enable_cache: true
+    username:
+      from_secret: REGISTRY_USER
+    password:
+      from_secret: REGISTRY_PASSWORD
+    registry: https://registry.asraphiel.dev/
+    repo: registry.asraphiel.dev/library/pinbot-rs
+    tags: ${DRONE_COMMIT_BRANCH}
+

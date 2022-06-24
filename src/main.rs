@@ -23,7 +23,7 @@ impl EventHandler for Handler {
         let emoji = r.emoji.as_data();
         if emoji == "📌" {
             let msg = r.message(c.http.clone()).await.expect("Could not find message");
-            for r in msg.reactions.iter() {
+            for r in &msg.reactions {
                 let emoji = r.reaction_type.as_data();
                 if emoji == "📌" {
                     let count = r.count;
@@ -39,7 +39,7 @@ impl EventHandler for Handler {
         let emoji = r.emoji.as_data();
         if emoji == "📌" {
             let msg = r.message(&c.http).await.expect("Could not find message");
-            for r in msg.reactions.iter() {
+            for r in &msg.reactions {
                 let emoji = r.reaction_type.as_data();
                 if emoji == "📌" {
                     let count = r.count;
