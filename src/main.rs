@@ -65,7 +65,7 @@ async fn handle_react(c: Context, r: Reaction) -> Result<(), serenity::Error> {
             .map(|r| r.count)
             .unwrap_or_default();
         println!("Pin count: {}", count);
-        if count >= 1 {
+        if count >= 5 {
             msg.pin(&c).await?;
         } else if count < 3 {
             msg.unpin(&c).await?;
