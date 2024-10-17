@@ -1,4 +1,4 @@
-from rust:1.61.0-alpine as builder
+FROM rust:1.61.0-alpine as builder
 
 
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY src /app/src
 
 RUN cargo build --release
 
-from alpine as runtime
+FROM alpine as runtime
 
 COPY --from=builder /app/target/release/pinbot-rs /app/pinbot-rs
 
